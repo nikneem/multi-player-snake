@@ -1,0 +1,88 @@
+name: Deploy to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC Azure login
+  contents: read
+
+jobs:
+  build-api:
+    name: Build & Push API image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push snake-api
+        uses: docker/build-push-action@v6
+        with:
+          context: src
+          file: src/Snake.Api/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_HOST }}/snake-api:${{ github.sha }}
+            ${{ secrets.REGISTRY_HOST }}/snake-api:latest
+
+  build-frontend:
+    name: Build & Push Frontend image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push snake-frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: src/App
+          file: src/App/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_HOST }}/snake-frontend:${{ github.sha }}
+            ${{ secrets.REGISTRY_HOST }}/snake-frontend:latest
+
+  deploy:
+    name: Deploy to Azure Container Apps
+    runs-on: ubuntu-latest
+    needs: [build-api, build-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: ${{ secrets.AZURE_RG }}
+          template: infra/main.bicep
+          parameters: >
+            apiImageTag=${{ github.sha }}
+            frontendImageTag=${{ github.sha }}
+            registryHost=${{ secrets.REGISTRY_HOST }}
+            registryUsername=${{ secrets.REGISTRY_USERNAME }}
+            registryPassword=${{ secrets.REGISTRY_PASSWORD }}
+          failOnStdErr: false
