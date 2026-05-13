@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Aspire/Snake.Aspire.AppHost/Snake.Aspire.AppHost.csproj" Id="a60f856e-a5f3-4ff7-ab62-893d510cae1f" />
+  <Project Path="Aspire/Snake.Aspire.ServiceDefaults/Snake.Aspire.ServiceDefaults.csproj" />
+  <Project Path="Snake.Api/Snake.Api.csproj" />
+</Solution>

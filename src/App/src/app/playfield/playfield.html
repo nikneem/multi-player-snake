@@ -1,0 +1,11 @@
+<div class="playfield">
+  @for (cell of cells; track cell) {
+    <div
+      class="cell"
+      [class.snake-head]="headIndex() === cell"
+      [class.snake-body]="bodyIndices().has(cell)"
+      [class.food]="foodIndex() === cell"
+    ></div>
+  }
+</div>
+

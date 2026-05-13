@@ -1,0 +1,35 @@
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.playfield {
+  display: grid;
+  grid-template-columns: repeat(100, 1fr);
+  width: min(90vw, 90vh);
+  aspect-ratio: 1;
+  background-color: #1a1a2e;
+  border: 2px solid #16213e;
+  box-sizing: border-box;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background-color: #1a1a2e;
+  border: 1px solid #16213e;
+  box-sizing: border-box;
+}
+
+.snake-head {
+  background-color: #4ade80;
+}
+
+.snake-body {
+  background-color: #16a34a;
+}
+
+.food {
+  background-color: #f97316;
+}
+
