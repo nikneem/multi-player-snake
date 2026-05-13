@@ -71,6 +71,12 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
+          env: [
+            {
+              name: 'Cors__AllowedOrigins__0'
+              value: 'https://snake-frontend.${env.properties.defaultDomain}'
+            }
+          ]
         }
       ]
       scale: {

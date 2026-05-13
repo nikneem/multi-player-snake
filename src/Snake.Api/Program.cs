@@ -9,19 +9,20 @@ builder.AddServiceDefaults();
 builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
 
-if (builder.Environment.IsDevelopment())
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
 {
-    builder.Services.AddCors(options =>
+    options.AddDefaultPolicy(policy =>
     {
-        options.AddPolicy("AllowAngularDev", policy =>
-        {
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
-}
+});
 
 var app = builder.Build();
 
@@ -31,9 +32,9 @@ app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseCors("AllowAngularDev");
 }
 
+app.UseCors();
 app.UseHttpsRedirection();
 
 app.MapHub<SnakeHub>("/hubs/snake");
