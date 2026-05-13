@@ -1,4 +1,4 @@
-<div class="playfield">
+<div class="playfield" [class.is-dead]="isDead()">
   @for (cell of cells; track cell) {
     <div
       class="cell"

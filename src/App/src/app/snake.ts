@@ -15,6 +15,7 @@ export class Snake {
   readonly segments = signal<SnakeSegment[]>([]);
   readonly direction = signal<Direction>('right');
   readonly foodPosition = signal<SnakeSegment | null>(null);
+  readonly gameState = signal<'playing' | 'dead'>('playing');
 
   constructor() {
     this.initialiseSnake();
@@ -24,6 +25,7 @@ export class Snake {
   }
 
   changeDirection(dir: Direction): void {
+    if (this.gameState() === 'dead') return;
     if (dir === OPPOSITE[this.direction()]) return;
     this.direction.set(dir);
   }
@@ -39,6 +41,8 @@ export class Snake {
   }
 
   private tick(): void {
+    if (this.gameState() === 'dead') return;
+
     const segs = this.segments();
     const head = segs[0];
     const dir = this.direction();
@@ -46,10 +50,25 @@ export class Snake {
     let col = head.col;
     let row = head.row;
 
-    if (dir === 'right') col = (col + 1) % 100;
-    else if (dir === 'left') col = (col - 1 + 100) % 100;
-    else if (dir === 'down') row = (row + 1) % 100;
-    else if (dir === 'up') row = (row - 1 + 100) % 100;
+    if (dir === 'right') col = col + 1;
+    else if (dir === 'left') col = col - 1;
+    else if (dir === 'down') row = row + 1;
+    else if (dir === 'up') row = row - 1;
+
+    // Wall collision
+    if (col < 0 || col >= 100 || row < 0 || row >= 100) {
+      this.die();
+      return;
+    }
+
+    // Self-collision: check against body segments that will remain after tail removal
+    const bodyAfterMove = new Set(
+      segs.slice(1, -1).map((s) => s.row * 100 + s.col),
+    );
+    if (bodyAfterMove.has(row * 100 + col)) {
+      this.die();
+      return;
+    }
 
     const newHead: SnakeSegment = { col, row };
     const food = this.foodPosition();
@@ -61,6 +80,17 @@ export class Snake {
     } else {
       this.segments.set([newHead, ...segs.slice(0, -1)]);
     }
+  }
+
+  private die(): void {
+    this.gameState.set('dead');
+    setTimeout(() => this.resetGame(), 600);
+  }
+
+  private resetGame(): void {
+    this.direction.set('right');
+    this.initialiseSnake();
+    this.gameState.set('playing');
   }
 
   private spawnFood(): void {
@@ -75,4 +105,5 @@ export class Snake {
     this.foodPosition.set({ col: index % 100, row: Math.floor(index / 100) });
   }
 }
+
 

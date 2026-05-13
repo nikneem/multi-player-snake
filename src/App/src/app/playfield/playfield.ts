@@ -43,6 +43,8 @@ export class Playfield {
     return f ? f.row * 100 + f.col : -1;
   });
 
+  readonly isDead = computed(() => this.snakeService.gameState() === 'dead');
+
   constructor() {
     afterNextRender(() => {
       this.inputService.registerPlayfieldElement(
