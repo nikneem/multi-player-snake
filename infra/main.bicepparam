@@ -1,7 +1,7 @@
 using './main.bicep'
 
 // Azure region — override if deploying outside westeurope
-param location = 'westeurope'
+param location = 'northeurope'
 
 // Logical name prefix for the Container Apps Environment
 param environmentName = 'snake-game'

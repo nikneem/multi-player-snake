@@ -16,17 +16,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Log in to container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ secrets.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_LOGIN_USERNAME }}
           password: ${{ secrets.ACR_LOGIN_PASSWORD }}
 
       - name: Build and push snake-api
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: src
           file: src/Snake.Api/Dockerfile
@@ -40,17 +40,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Log in to container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ secrets.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_LOGIN_USERNAME }}
           password: ${{ secrets.ACR_LOGIN_PASSWORD }}
 
       - name: Build and push snake-frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: src/App
           file: src/App/Dockerfile
@@ -65,10 +65,10 @@ jobs:
     needs: [build-api, build-frontend]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Azure login (OIDC)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -77,9 +77,10 @@ jobs:
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
         with:
-          resourceGroupName: ${{ secrets.AZURE_RG }}
+          resourceGroupName: rg-snake-demo-app
           template: infra/main.bicep
           parameters: >
+            location=northeurope
             apiImageTag=${{ github.sha }}
             frontendImageTag=${{ github.sha }}
             registryHost=${{ secrets.ACR_LOGIN_SERVER }}
