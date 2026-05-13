@@ -1,5 +1,6 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { Direction, SnakeSegment } from './models/snake.model';
+import { RealtimeService } from './services/realtime.service';
 
 const OPPOSITE: Record<Direction, Direction> = {
   up: 'down',
@@ -11,6 +12,7 @@ const OPPOSITE: Record<Direction, Direction> = {
 @Injectable({ providedIn: 'root' })
 export class Snake {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly realtimeService = inject(RealtimeService);
 
   readonly segments = signal<SnakeSegment[]>([]);
   readonly direction = signal<Direction>('right');
@@ -80,6 +82,14 @@ export class Snake {
     } else {
       this.segments.set([newHead, ...segs.slice(0, -1)]);
     }
+
+    const updatedSegments = this.segments();
+    this.realtimeService.publishState({
+      connectionId: '',
+      segments: updatedSegments,
+      direction: dir,
+      length: updatedSegments.length,
+    });
   }
 
   private die(): void {

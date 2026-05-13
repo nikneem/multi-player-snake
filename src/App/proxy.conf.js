@@ -8,4 +8,5 @@ const target =
 module.exports = {
   '/health': { target, secure: false, changeOrigin: true },
   '/api': { target, secure: false, changeOrigin: true },
+  '/hubs': { target, secure: false, changeOrigin: true, ws: true },
 };

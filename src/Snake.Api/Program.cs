@@ -1,3 +1,5 @@
+using Snake.Api.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
@@ -5,6 +7,21 @@ builder.AddServiceDefaults();
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAngularDev", policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+    });
+}
 
 var app = builder.Build();
 
@@ -14,9 +31,12 @@ app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseCors("AllowAngularDev");
 }
 
 app.UseHttpsRedirection();
+
+app.MapHub<SnakeHub>("/hubs/snake");
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
    .WithName("GetHealth");

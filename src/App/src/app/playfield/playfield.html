@@ -5,6 +5,7 @@
       [class.snake-head]="headIndex() === cell"
       [class.snake-body]="bodyIndices().has(cell)"
       [class.food]="foodIndex() === cell"
+      [class.remote-snake]="remoteSegmentIndices().has(cell) && headIndex() !== cell && !bodyIndices().has(cell)"
     ></div>
   }
 </div>

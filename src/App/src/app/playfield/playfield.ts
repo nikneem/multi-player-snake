@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { Input } from '../input';
 import { Snake } from '../snake';
+import { RealtimeService } from '../services/realtime.service';
 
 @Component({
   selector: 'snk-playfield',
@@ -20,6 +21,7 @@ export class Playfield {
   private readonly snakeService = inject(Snake);
   private readonly inputService = inject(Input);
   private readonly elementRef = inject(ElementRef);
+  private readonly realtimeService = inject(RealtimeService);
 
   readonly cells = Array.from({ length: 10_000 }, (_, i) => i);
 
@@ -44,6 +46,16 @@ export class Playfield {
   });
 
   readonly isDead = computed(() => this.snakeService.gameState() === 'dead');
+
+  readonly remoteSegmentIndices = computed(() => {
+    const indices = new Set<number>();
+    for (const state of this.realtimeService.remoteSnakes().values()) {
+      for (const seg of state.segments) {
+        indices.add(seg.row * 100 + seg.col);
+      }
+    }
+    return indices;
+  });
 
   constructor() {
     afterNextRender(() => {
