@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Playfield } from './playfield/playfield';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'snk-root',
-  imports: [Playfield],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {}
+
