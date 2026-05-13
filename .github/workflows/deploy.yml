@@ -8,15 +8,39 @@ on:
 
 permissions:
   id-token: write   # required for OIDC Azure login
-  contents: read
+  contents: write   # required for GitHub release creation
 
 jobs:
-  build-api:
-    name: Build & Push API image
+  version:
+    name: Calculate Version
     runs-on: ubuntu-latest
+    outputs:
+      fullSemVer: ${{ steps.version_step.outputs.fullSemVer }}
+      majorMinorPatch: ${{ steps.version_step.outputs.majorMinorPatch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4
+        with:
+          versionSpec: '6.7.x'
+
+      - name: Determine Version
+        id: version_step
+        uses: gittools/actions/gitversion/execute@v4
+
+  build-api:
+    name: Build & Push API image
+    runs-on: ubuntu-latest
+    needs: [version]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Log in to container registry
         uses: docker/login-action@v4
@@ -32,15 +56,18 @@ jobs:
           file: src/Snake.Api/Dockerfile
           push: true
           tags: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/snake-api:${{ github.sha }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/snake-api:${{ needs.version.outputs.fullSemVer }}
             ${{ secrets.ACR_LOGIN_SERVER }}/snake-api:latest
 
   build-frontend:
     name: Build & Push Frontend image
     runs-on: ubuntu-latest
+    needs: [version]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Log in to container registry
         uses: docker/login-action@v4
@@ -56,13 +83,13 @@ jobs:
           file: src/App/Dockerfile
           push: true
           tags: |
-            ${{ secrets.ACR_LOGIN_SERVER }}/snake-frontend:${{ github.sha }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/snake-frontend:${{ needs.version.outputs.fullSemVer }}
             ${{ secrets.ACR_LOGIN_SERVER }}/snake-frontend:latest
 
   deploy:
     name: Deploy to Azure Container Apps
     runs-on: ubuntu-latest
-    needs: [build-api, build-frontend]
+    needs: [version, build-api, build-frontend]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -81,9 +108,29 @@ jobs:
           template: infra/main.bicep
           parameters: >
             location=northeurope
-            apiImageTag=${{ github.sha }}
-            frontendImageTag=${{ github.sha }}
+            apiImageTag=${{ needs.version.outputs.fullSemVer }}
+            frontendImageTag=${{ needs.version.outputs.fullSemVer }}
             registryHost=${{ secrets.ACR_LOGIN_SERVER }}
             registryUsername=${{ secrets.ACR_LOGIN_USERNAME }}
             registryPassword=${{ secrets.ACR_LOGIN_PASSWORD }}
           failOnStdErr: false
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [version, deploy]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.version.outputs.fullSemVer }}"
+          gh release view "v${VERSION}" >/dev/null 2>&1 || \
+            gh release create "v${VERSION}" --generate-notes --title "v${VERSION}"
+
