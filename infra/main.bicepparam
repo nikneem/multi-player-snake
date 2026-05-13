@@ -12,9 +12,9 @@ param apiImageTag = 'latest'
 param frontendImageTag = 'latest'
 
 // Container registry — stored as GitHub Actions secrets:
-//   REGISTRY_HOST     e.g. myregistry.azurecr.io
-//   REGISTRY_USERNAME e.g. myregistry
-//   REGISTRY_PASSWORD (admin password or token)
+//   ACR_LOGIN_SERVER     e.g. myregistry.azurecr.io
+//   ACR_LOGIN_USERNAME e.g. myregistry
+//   ACR_LOGIN_PASSWORD (admin password or token)
 param registryHost = ''
 param registryUsername = ''
 param registryPassword = ''

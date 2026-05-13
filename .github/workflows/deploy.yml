@@ -21,9 +21,9 @@ jobs:
       - name: Log in to container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.REGISTRY_HOST }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_LOGIN_USERNAME }}
+          password: ${{ secrets.ACR_LOGIN_PASSWORD }}
 
       - name: Build and push snake-api
         uses: docker/build-push-action@v6
@@ -32,8 +32,8 @@ jobs:
           file: src/Snake.Api/Dockerfile
           push: true
           tags: |
-            ${{ secrets.REGISTRY_HOST }}/snake-api:${{ github.sha }}
-            ${{ secrets.REGISTRY_HOST }}/snake-api:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/snake-api:${{ github.sha }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/snake-api:latest
 
   build-frontend:
     name: Build & Push Frontend image
@@ -45,9 +45,9 @@ jobs:
       - name: Log in to container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.REGISTRY_HOST }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_LOGIN_USERNAME }}
+          password: ${{ secrets.ACR_LOGIN_PASSWORD }}
 
       - name: Build and push snake-frontend
         uses: docker/build-push-action@v6
@@ -56,8 +56,8 @@ jobs:
           file: src/App/Dockerfile
           push: true
           tags: |
-            ${{ secrets.REGISTRY_HOST }}/snake-frontend:${{ github.sha }}
-            ${{ secrets.REGISTRY_HOST }}/snake-frontend:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/snake-frontend:${{ github.sha }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/snake-frontend:latest
 
   deploy:
     name: Deploy to Azure Container Apps
@@ -82,7 +82,7 @@ jobs:
           parameters: >
             apiImageTag=${{ github.sha }}
             frontendImageTag=${{ github.sha }}
-            registryHost=${{ secrets.REGISTRY_HOST }}
-            registryUsername=${{ secrets.REGISTRY_USERNAME }}
-            registryPassword=${{ secrets.REGISTRY_PASSWORD }}
+            registryHost=${{ secrets.ACR_LOGIN_SERVER }}
+            registryUsername=${{ secrets.ACR_LOGIN_USERNAME }}
+            registryPassword=${{ secrets.ACR_LOGIN_PASSWORD }}
           failOnStdErr: false

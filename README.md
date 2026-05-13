@@ -52,9 +52,9 @@ Add these secrets in your repository settings (**Settings → Secrets and variab
 
 | Secret | Description |
 |---|---|
-| `REGISTRY_HOST` | Container registry hostname, e.g. `myregistry.azurecr.io` |
-| `REGISTRY_USERNAME` | Registry username / service principal ID |
-| `REGISTRY_PASSWORD` | Registry password / service principal secret |
+| `ACR_LOGIN_SERVER` | Container registry hostname, e.g. `myregistry.azurecr.io` |
+| `ACR_LOGIN_USERNAME` | Registry username / service principal ID |
+| `ACR_LOGIN_PASSWORD` | Registry password / service principal secret |
 | `AZURE_CLIENT_ID` | Azure service principal (app) client ID for OIDC login |
 | `AZURE_TENANT_ID` | Azure tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Azure subscription ID |
