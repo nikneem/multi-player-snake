@@ -47,14 +47,27 @@ export class Playfield {
 
   readonly isDead = computed(() => this.snakeService.gameState() === 'dead');
 
-  readonly remoteSegmentIndices = computed(() => {
-    const indices = new Set<number>();
-    for (const state of this.realtimeService.remoteSnakes().values()) {
+  readonly remoteSegmentColors = computed<Map<number, string>>(() => {
+    const localOccupied = new Set<number>([
+      this.headIndex(),
+      ...this.bodyIndices(),
+    ]);
+    const colors = this.realtimeService.remoteColors();
+    const map = new Map<number, string>();
+    for (const [connectionId, state] of this.realtimeService.remoteSnakes()) {
+      const color = colors.get(connectionId);
+      if (!color) continue;
       for (const seg of state.segments) {
-        indices.add(seg.row * 100 + seg.col);
+        const index = seg.row * 100 + seg.col;
+        // Local rendering always wins over remote colouring.
+        if (localOccupied.has(index)) continue;
+        // First writer wins for overlapping remotes — order is insertion order.
+        if (!map.has(index)) {
+          map.set(index, color);
+        }
       }
     }
-    return indices;
+    return map;
   });
 
   constructor() {

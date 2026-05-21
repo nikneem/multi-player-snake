@@ -72,6 +72,21 @@ export class Snake {
       return;
     }
 
+    // Remote-snake collision: any segment of any remote player is lethal.
+    // Spec: openspec/changes/add-multiplayer-signalr/specs/snake-collision/spec.md
+    const remoteSnakes = this.realtimeService.remoteSnakes();
+    if (remoteSnakes.size > 0) {
+      const newHeadIndex = row * 100 + col;
+      for (const remote of remoteSnakes.values()) {
+        for (const seg of remote.segments) {
+          if (seg.row * 100 + seg.col === newHeadIndex) {
+            this.die();
+            return;
+          }
+        }
+      }
+    }
+
     const newHead: SnakeSegment = { col, row };
     const food = this.foodPosition();
     const atFood = food !== null && col === food.col && row === food.row;
@@ -83,13 +98,7 @@ export class Snake {
       this.segments.set([newHead, ...segs.slice(0, -1)]);
     }
 
-    const updatedSegments = this.segments();
-    this.realtimeService.publishState({
-      connectionId: '',
-      segments: updatedSegments,
-      direction: dir,
-      length: updatedSegments.length,
-    });
+    this.publishCurrentState();
   }
 
   private die(): void {
@@ -101,6 +110,19 @@ export class Snake {
     this.direction.set('right');
     this.initialiseSnake();
     this.gameState.set('playing');
+    // Republish so peers stop rendering the dead snake before the next tick.
+    // Spec: openspec/changes/add-multiplayer-signalr/specs/game-reset/spec.md
+    this.publishCurrentState();
+  }
+
+  private publishCurrentState(): void {
+    const updatedSegments = this.segments();
+    this.realtimeService.publishState({
+      connectionId: '',
+      segments: updatedSegments,
+      direction: this.direction(),
+      length: updatedSegments.length,
+    });
   }
 
   private spawnFood(): void {

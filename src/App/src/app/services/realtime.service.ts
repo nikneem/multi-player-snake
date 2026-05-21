@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import {
   HubConnection,
   HubConnectionBuilder,
@@ -6,6 +6,7 @@ import {
 } from '@microsoft/signalr';
 import { APP_CONFIG } from '../app-config.token';
 import { SnakeStateMessage } from '../models/snake-state-message';
+import { colorForConnectionId } from './remote-snake-color';
 
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
@@ -15,6 +16,18 @@ export class RealtimeService {
   private readonly connection: HubConnection;
 
   readonly remoteSnakes = signal<Map<string, SnakeStateMessage>>(new Map());
+
+  /**
+   * Stable HSL colour per remote connection id, derived deterministically from
+   * the id itself. Recomputed only when the set of connection ids changes.
+   */
+  readonly remoteColors = computed<Map<string, string>>(() => {
+    const map = new Map<string, string>();
+    for (const id of this.remoteSnakes().keys()) {
+      map.set(id, colorForConnectionId(id));
+    }
+    return map;
+  });
 
   constructor() {
     this.connection = new HubConnectionBuilder()
